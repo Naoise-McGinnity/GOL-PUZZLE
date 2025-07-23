@@ -32,6 +32,7 @@ win = False
 level = -1
 frame_advance = False
 glider = "glider"
+showing_info = False
 
 
 def new_level():
@@ -147,7 +148,7 @@ class info():
         #     text_rect.top = start_y + i * line_height
         #     self.surface.blit(text_surface, text_rect)
         if self.image:
-            image = pygame.image.load(f"{self.image}\{self.frame}.png")
+            image = pygame.image.load(os.path.join(f"{self.image}", f"{self.frame}.png"))
             image = pygame.transform.smoothscale(image, (self.surface.get_width(), self.surface.get_height()))
             img_rect = image.get_rect(center=(self.rect.centerx, self.rect.centery))
             self.surface.blit(image, img_rect)
@@ -173,7 +174,7 @@ def draw_grid(surface, grid):
             if walls[y][x] == 1:
                 rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(surface, (100, 100, 100), rect)
-            if grid[y][x] == 1:
+            elif grid[y][x] == 1:
                 rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(surface, CELL_COLOR, rect)
             elif [x, y] in destination:
@@ -188,6 +189,7 @@ def draw_grid(surface, grid):
         pygame.draw.line(surface, GRID_COLOR, (0, y), (GRID_WIDTH * CELL_SIZE, y))
 
 def draw_ui(surface):
+    global font
     global showing_info
     font, size = fit_text_to_button(f"Press SPACE to start. | Cells placed: {placed}/{MAX_PLACED} | Rules: {rules}", None, surface.get_width() - 20, 100, return_size=True)
     big_font = pygame.font.Font(None, int(size * 1.5))
@@ -255,7 +257,80 @@ def load_game():
             data = json.load(f)
             level = data.get("level", -1)
             
-load_game()
+import sys
+
+class Button:
+    def __init__(self, rect, text, font, color, hover_color):
+        self.rect = pygame.Rect(rect)
+        self.text = text
+        self.font = font
+        self.color = color
+        self.hover_color = hover_color
+        self.text_surf = font.render(text, True, (255, 255, 255))
+
+    def draw(self, screen):
+        mouse_pos = pygame.mouse.get_pos()
+        is_hover = self.rect.collidepoint(mouse_pos)
+        screen.blit(self.text_surf, self.text_surf.get_rect(center=self.rect.center))
+
+    def is_clicked(self, event):
+        return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+
+def show_title_screen(screen, font):
+    screen.fill((0, 0, 0))
+    w, h = screen.get_size()
+    extra = 25
+    background = pygame.image.load(os.path.join(f"title screen",f"{1}.png"))
+    background = pygame.transform.smoothscale(background, (w, h))
+    screen.blit(background, (0, 0))
+
+    button_width, button_height = 250, 60
+    spacing = 80
+
+    buttons = {
+        "new": Button(((w - button_width)//2, h//2 - spacing + extra, button_width, button_height), "New Game", font, (200, 200, 200), (255, 255, 255)),
+        "continue": Button(((w - button_width)//2, h//2 + extra, button_width, button_height), "Continue", font, (200, 200, 200), (255, 255, 255)),
+        "quit": Button(((w - button_width)//2, h//2 + spacing + extra, button_width, button_height), "Quit", font, (200, 200, 200), (255, 255, 255)),
+    }
+    
+    pygame.display.flip()
+
+    clock = pygame.time.Clock()
+
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(background, (0, 0))
+
+        for btn in buttons.values():
+            btn.draw(screen)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            for name, btn in buttons.items():
+                if btn.is_clicked(event):
+                    if name == "quit":
+                        pygame.quit()
+                        sys.exit()
+                    for i in range(3):
+                        background = pygame.image.load(os.path.join(f"title screen", f"{i + 1}.png"))
+                        background = pygame.transform.smoothscale(background, (w, h))
+                        screen.blit(background, (0, 0))
+                        pygame.display.flip()
+                        clock.tick(2)
+                    return name
+
+        clock.tick(60)
+
+draw_ui(screen)
+screen.fill(BG_COLOR)
+
+if show_title_screen(screen, font) == "continue":
+    load_game()
 new_level()
 
 while running:
