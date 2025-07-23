@@ -3,8 +3,10 @@ import numpy as np
 import json
 import os
 
+pygame.display.init()
+something = min(pygame.display.Info().current_h, pygame.display.Info().current_w)
 SAVE_FILE = "save_data.json"
-CELL_SIZE = 50
+CELL_SIZE = (0.9 * something) // 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 FPS = 10
@@ -61,7 +63,6 @@ def new_level():
         MAX_PLACED = 100000
     CELL_SIZE = min(screen.get_width() // GRID_WIDTH, screen.get_height() // GRID_HEIGHT)
 
-new_level()
 
 def save_grid():
     global walls, rules, destination, grid, MAX_PLACED, level, GRID_WIDTH, placeable
@@ -78,7 +79,7 @@ def save_grid():
     with open(f"levels/level-{level}.json", "w") as f:
         json.dump(level_data, f)
         
-def fit_text_to_button(text, font_name, max_width, max_height, max_font_size=30, min_font_size=8):
+def fit_text_to_button(text, font_name, max_width, max_height, max_font_size=30, min_font_size=8, return_size=False):
     """
     Returns a pygame.font.Font object with the largest font size that fits
     the text inside the given max_width and max_height bounds.
@@ -87,8 +88,8 @@ def fit_text_to_button(text, font_name, max_width, max_height, max_font_size=30,
         font = pygame.font.Font(font_name, size)
         text_surface = font.render(text, True, (0, 0, 0))
         if text_surface.get_width() <= max_width and text_surface.get_height() <= max_height:
-            return font
-    return pygame.font.Font(font_name, min_font_size)
+            return font if not return_size else (font, size)
+    return pygame.font.Font(font_name, min_font_size) if not return_size else (pygame.font.Font(font_name, min_font_size), (min_font_size))
 
 pygame.display.set_caption("Game of Life Puzzle")
 
@@ -147,6 +148,7 @@ class info():
         #     self.surface.blit(text_surface, text_rect)
         if self.image:
             image = pygame.image.load(f"{self.image}\{self.frame}.png")
+            image = pygame.transform.smoothscale(image, (self.surface.get_width(), self.surface.get_height()))
             img_rect = image.get_rect(center=(self.rect.centerx, self.rect.centery))
             self.surface.blit(image, img_rect)
             self.frame += 1
@@ -187,8 +189,8 @@ def draw_grid(surface, grid):
 
 def draw_ui(surface):
     global showing_info
-    font = pygame.font.Font(None, 36)
-    big_font = pygame.font.Font(None, 48)
+    font, size = fit_text_to_button(f"Press SPACE to start. | Cells placed: {placed}/{MAX_PLACED} | Rules: {rules}", None, surface.get_width() - 20, 100, return_size=True)
+    big_font = pygame.font.Font(None, int(size * 1.5))
 
     if showing_info:
         try:
@@ -241,20 +243,20 @@ def update(grid):
 
 def save_game():
     data = {
-        "total_gen": total_gen,
-        "MAX_PLACED": MAX_PLACED,
-        'rules': rules
+        "level": level-1
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f)
 
 def load_game():
-    global total_gen, MAX_PLACED, rules
+    global level
     if os.path.exists(SAVE_FILE):
         with open(SAVE_FILE, "r") as f:
             data = json.load(f)
-            total_gen = data.get("total_gen", 0)
-            MAX_PLACED = data.get("MAX_PLACED", 10)
+            level = data.get("level", -1)
+            
+load_game()
+new_level()
 
 while running:
     if frame_advance:
