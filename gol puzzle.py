@@ -95,8 +95,8 @@ def fit_text_to_button(text, font_name, max_width, max_height, max_font_size=30,
 pygame.display.set_caption("Game of Life Puzzle")
 
 class info():
-    def __init__(self, title, font_name="freesansbold.ttf", max_width=200, max_height=100, surface=screen, image=None, max_frame=48):
-        self.text = ""
+    def __init__(self, title, text=None, font_name="freesansbold.ttf", max_width=200, max_height=100, surface=screen, image=None, max_frame=48):
+        self.text = text
         self.title = title
         self.surface = surface
         self.image = image
@@ -135,18 +135,19 @@ class info():
         title_surface = self.title_font.render(self.title, True, (255, 255, 255))
         title_rect = title_surface.get_rect(center=(self.rect.centerx, self.rect.top + 20))
         self.surface.blit(title_surface, title_rect)
+        
+        if self.text:
+            lines = self.wrap_text(self.text, self.font, self.rect.width - 10)
+            line_height = self.font.get_height()
+            start_y = title_rect.bottom + 10
 
-        # lines = self.wrap_text(self.text, self.font, self.rect.width - 10)
-        # line_height = self.font.get_height()
-        # start_y = title_rect.bottom + 10
-
-        # for i, line in enumerate(lines):
-        #     if start_y + i * line_height > self.rect.bottom - 10:
-        #         break
-        #     text_surface = self.font.render(line, True, (255, 255, 255))
-        #     text_rect = text_surface.get_rect(centerx=self.rect.centerx)
-        #     text_rect.top = start_y + i * line_height
-        #     self.surface.blit(text_surface, text_rect)
+            for i, line in enumerate(lines):
+                if start_y + i * line_height > self.rect.bottom - 10:
+                    break
+                text_surface = self.font.render(line, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(centerx=self.rect.centerx)
+                text_rect.top = start_y + i * line_height
+                self.surface.blit(text_surface, text_rect)
         if self.image:
             image = pygame.image.load(os.path.join(f"{self.image}", f"{self.frame}.png"))
             image = pygame.transform.smoothscale(image, (self.surface.get_width(), self.surface.get_height()))
@@ -164,6 +165,7 @@ class info():
 info_texts = [
     info(""),
     info(title="Glider", image=glider),
+    info("Turners", text="Turners are a large family of patterns that can be used to change the path of a glider. Be careful, they can often fail because they require a specific \"colour\" of glider to work. So if your glider fails, try swapping the long and short sides.", max_width=300, max_height=150),
     info("Big Glider", image="big glider", max_frame=17),
     info(""),
     info(""),
