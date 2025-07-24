@@ -165,6 +165,10 @@ info_texts = [
     info(""),
     info(title="Glider", image=glider),
     info("Big Glider", image="big glider", max_frame=17),
+    info(""),
+    info(""),
+    info("Replicator", image="replicator", max_frame=15),
+
 ]
 
 def draw_grid(surface, grid):
@@ -279,7 +283,7 @@ class Button:
 def show_title_screen(screen, font):
     screen.fill((0, 0, 0))
     w, h = screen.get_size()
-    extra = 25
+    extra = 125
     background = pygame.image.load(os.path.join(f"title screen",f"{1}.png"))
     background = pygame.transform.smoothscale(background, (w, h))
     screen.blit(background, (0, 0))
@@ -346,6 +350,7 @@ while running:
                 if event.key == pygame.K_RETURN:
                     screen.fill(BG_COLOR)
                     showing_info = False
+                    FPS = 10 if FPS == 1 else FPS
                 if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                     FPS = 1 if FPS == 10 else 10
             else:

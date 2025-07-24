@@ -1,2 +1,6 @@
 .venv/
 save_data.json
+rename_by_creation.py
+__pycache__/
+crop_top_bar.py
+-100.py
